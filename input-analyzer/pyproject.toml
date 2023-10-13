@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "input-analyzer"
+version = "0.1.0"
+description = ""
+authors = ["Wazarr94"]
+readme = "README.md"
+packages = [{ include = "input_analyzer" }]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+polars = "^0.19.8"
+pydantic = "^2.4.2"
+fastapi = "^0.103.2"
+uvicorn = { extras = ["standard"], version = "^0.23.2" }
+pandas = "^2.1.1"
+pyarrow = "^13.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
