@@ -69,9 +69,3 @@ export const matchStore = writable<MatchStoreElement>({
 	loading: false,
 	error: false
 });
-
-export const matchMinStore = writable<MatchMinStoreElement>({
-	matches: [],
-	loading: false,
-	error: false
-});

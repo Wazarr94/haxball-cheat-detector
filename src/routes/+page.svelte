@@ -1,12 +1,26 @@
 <script lang="ts">
 	import { handleFile } from '$lib/gameLogic';
-	import { matchMinStore, type MatchMinStoreElement } from '$lib/matchStore';
+	import { matchStore, type MatchMinStoreElement, type MatchStoreElement } from '$lib/matchStore';
 
-	let matchesArr: MatchMinStoreElement;
+	let matchesArr: MatchStoreElement;
+	let matchesMinArr: MatchMinStoreElement;
 
-	matchMinStore.subscribe((value) => {
+	matchStore.subscribe((value) => {
 		matchesArr = value;
 	});
+
+	$: matchesMinArr = {
+		loading: matchesArr.loading,
+		error: matchesArr.error,
+		matches: matchesArr.matches.map((match) => {
+			return {
+				scoreRed: match.scoreRed,
+				scoreBlue: match.scoreBlue,
+				gameTicks: match.gameTicks,
+				playerActions: match.playerActions
+			};
+		})
+	};
 
 	async function getAnalysis() {
 		const res = await fetch('api/recording', {
@@ -14,7 +28,7 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(matchesArr)
+			body: JSON.stringify(matchesMinArr)
 		});
 		const data = await res.json();
 		console.log(data);
@@ -24,13 +38,13 @@
 <h1>Haxball Cheat Detector</h1>
 <input type="file" accept=".hbr2" on:change={handleFile} />
 
-{#if matchesArr.loading}
+{#if matchesMinArr.loading}
 	<p>Loading...</p>
-{:else if matchesArr.error}
+{:else if matchesMinArr.error}
 	<p>Bad file</p>
-{:else if matchesArr.matches.length > 0}
+{:else if matchesMinArr.matches.length > 0}
 	<button on:click={getAnalysis}>Get analysis</button>
-	{#each matchesArr.matches as match, index}
+	{#each matchesMinArr.matches as match, index}
 		<h3>Match {index + 1}</h3>
 		<p>{match.scoreRed} - {match.scoreBlue}</p>
 		<p>Actions for {match.playerActions.length} frames</p>
