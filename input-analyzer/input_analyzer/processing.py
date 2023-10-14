@@ -1,3 +1,5 @@
+import itertools
+
 import polars as pl
 
 from input_analyzer.utils import (
@@ -22,12 +24,9 @@ def create_dataframes(request: RecordingRequest) -> list[pl.DataFrame]:
     for match in request.matches:
         if match.gameTicks <= 1:
             continue
-        df = pl.DataFrame(match.playerActions)
+        df = pl.DataFrame(itertools.chain(*match.playerActions))
         df_player_actions = (
-            df.melt()
-            .select("value")
-            .unnest("value")
-            .with_columns(
+            df.with_columns(
                 up=(pl.col("action") & 1) != 0,
                 down=(pl.col("action") & 2) != 0,
                 left=(pl.col("action") & 4) != 0,
