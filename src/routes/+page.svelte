@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { handleFile } from '$lib/gameLogic';
-	import { matchStore, type MatchStoreElement } from '$lib/matchStore';
+	import { matchMinStore, type MatchMinStoreElement } from '$lib/matchStore';
 
-	let matchesArr: MatchStoreElement;
+	let matchesArr: MatchMinStoreElement;
 
-	matchStore.subscribe((value) => {
+	matchMinStore.subscribe((value) => {
 		matchesArr = value;
 	});
 
