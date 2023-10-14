@@ -23,6 +23,11 @@
 	};
 
 	async function getAnalysis() {
+		let sendFile = JSON.stringify(matchesMinArr);
+		let sizeOctetSendFile = new TextEncoder().encode(sendFile).length;
+		let sizeMB = sizeOctetSendFile / 1000000;
+		console.log(`Size of file: ${sizeMB} MB`);
+
 		const res = await fetch('api/recording', {
 			method: 'POST',
 			headers: {

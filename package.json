@@ -5,7 +5,7 @@
 	"scripts": {
 		"python-dev": "pip3 install -r input-analyzer/requirements.txt && cd input-analyzer && uvicorn main:app --reload",
 		"svelte-dev": "vite dev",
-		"dev": "concurrently \"npm run python-dev\" \"npm run svelte-dev\"",
+		"dev": "concurrently \"pnpm run python-dev\" \"pnpm run svelte-dev\"",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
