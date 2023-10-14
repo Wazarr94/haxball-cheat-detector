@@ -9,7 +9,7 @@
 	});
 
 	async function getAnalysis() {
-		const res = await fetch('http://127.0.0.1:8000/recording', {
+		const res = await fetch('api/recording', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
