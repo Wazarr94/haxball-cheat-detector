@@ -22,8 +22,6 @@ CHEAT_PATTERNS = [
 def create_dataframes(request: RecordingRequest) -> list[pl.DataFrame]:
     list_df = []
     for match in request.matches:
-        if match.gameTicks <= 1:
-            continue
         df = pl.DataFrame(itertools.chain(*match.playerActions))
         df_player_actions = (
             df.with_columns(

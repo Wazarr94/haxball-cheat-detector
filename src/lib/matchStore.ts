@@ -45,11 +45,12 @@ type MatchElement = {
 	playerActions: { frame: number; player: string; action: number }[][];
 };
 
-type MatchElementMin = {
+export type MatchElementMin = {
 	scoreRed: number;
 	scoreBlue: number;
 	gameTicks: number;
 	playerActions: { frame: number; player: string; action: number }[][];
+	suspiciousActions?: SuspiciousAction[];
 };
 
 export type MatchStoreElement = {
@@ -62,6 +63,16 @@ export type MatchMinStoreElement = {
 	matches: MatchElementMin[];
 	loading: boolean;
 	error: boolean;
+};
+
+export type SuspiciousAction = {
+	frame: number;
+	player: string;
+	pattern: {
+		consecutive_frames: number;
+		change_frame: number;
+		suspicion: 'low' | 'medium' | 'high';
+	};
 };
 
 export const matchStore = writable<MatchStoreElement>({

@@ -1,6 +1,12 @@
 <script lang="ts">
+	import { getTime } from '$lib';
 	import { handleFile } from '$lib/gameLogic';
-	import { matchStore, type MatchMinStoreElement, type MatchStoreElement } from '$lib/matchStore';
+	import {
+		matchStore,
+		type MatchMinStoreElement,
+		type MatchStoreElement,
+		type MatchElementMin
+	} from '$lib/matchStore';
 
 	let matchesArr: MatchStoreElement;
 	let matchesMinArr: MatchMinStoreElement;
@@ -12,20 +18,23 @@
 	$: matchesMinArr = {
 		loading: matchesArr.loading,
 		error: matchesArr.error,
-		matches: matchesArr.matches.map((match) => {
-			return {
-				scoreRed: match.scoreRed,
-				scoreBlue: match.scoreBlue,
-				gameTicks: match.gameTicks,
-				playerActions: match.playerActions
-			};
-		})
+		matches: matchesArr.matches
+			.filter((match) => match.gameTicks > 1)
+			.map((match) => {
+				return {
+					scoreRed: match.scoreRed,
+					scoreBlue: match.scoreBlue,
+					gameTicks: match.gameTicks,
+					playerActions: match.playerActions,
+					suspiciousActions: []
+				} satisfies MatchElementMin;
+			})
 	};
 
 	async function getAnalysis() {
 		let sendFile = JSON.stringify(matchesMinArr);
 		let sizeOctetSendFile = new TextEncoder().encode(sendFile).length;
-		let sizeMB = sizeOctetSendFile / 1000000;
+		let sizeMB = Math.round((sizeOctetSendFile / 1000000) * 100) / 100;
 		console.log(`Size of file: ${sizeMB} MB`);
 
 		const res = await fetch('api/recording', {
@@ -37,6 +46,17 @@
 		});
 		const data = await res.json();
 		console.log(data);
+		let value = matchesMinArr.matches.map((match, index) => {
+			return {
+				...match,
+				suspiciousActions: data.matches[index]
+			} satisfies MatchElementMin;
+		});
+		matchesMinArr = {
+			loading: false,
+			error: false,
+			matches: value
+		} satisfies MatchMinStoreElement;
 	}
 </script>
 
@@ -53,5 +73,17 @@
 		<h3>Match {index + 1}</h3>
 		<p>{match.scoreRed} - {match.scoreBlue}</p>
 		<p>Actions for {match.playerActions.length} frames</p>
+		{#if match.suspiciousActions}
+			<p>Suspicious actions: {match.suspiciousActions.length}</p>
+			<ul>
+				{#each match.suspiciousActions as action}
+					<li>
+						{action.player} at {getTime(action.frame)} with pattern: {action.pattern.change_frame} frame
+						actions for {action.pattern.consecutive_frames} frames (suspicion level: {action.pattern
+							.suspicion})
+					</li>
+				{/each}
+			</ul>
+		{/if}
 	{/each}
 {/if}
