@@ -32,6 +32,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@msgpack/msgpack": "3.0.0-beta2",
 		"concurrently": "^8.2.1",
 		"jszip": "^3.10.1",
 		"pako": "^2.1.0"

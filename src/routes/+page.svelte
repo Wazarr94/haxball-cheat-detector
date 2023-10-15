@@ -7,6 +7,7 @@
 		type MatchStoreElement,
 		type MatchElementMin
 	} from '$lib/matchStore';
+	import { encode } from "@msgpack/msgpack"
 
 	let matchesArr: MatchStoreElement;
 	let matchesMinArr: MatchMinStoreElement;
@@ -53,24 +54,18 @@
 		let sizeOctetSendFile = new TextEncoder().encode(sendFile).length;
 		let sizeMB = Math.round((sizeOctetSendFile / 1000000) * 100) / 100;
 		console.log(`Size of file: ${sizeMB} MB`);
-		const stream = new Blob([sendFile], { type: 'application/json' }).stream();
-		const compressedFile = stream.pipeThrough(new CompressionStream('gzip'));
-		const reader = compressedFile.getReader();
-		let compressedFileRes = '';
-		while (true) {
-			const { done, value } = await reader.read();
-			if (done) break;
-			compressedFileRes += new TextDecoder().decode(value);
-		}
-		let sizeCompressMB = Math.round((new TextEncoder().encode(compressedFileRes).length / 1000000) * 100) / 100;
+		const compressedFile = encode(match);
+		let sizeOctetCompressedFile = compressedFile.length;
+		let sizeCompressMB = Math.round((sizeOctetCompressedFile / 1000000) * 100) / 100;
 		console.log(`Size of compressed file: ${sizeCompressMB} MB`);
 		
 		const res = await fetch('api/recording', {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'Content-Encoding': 'msgpack'
 			},
-			body: compressedFileRes
+			body: compressedFile
 		});
 		const data = await res.json();
 		console.log(data);
