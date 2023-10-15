@@ -5,8 +5,13 @@
 		matchStore,
 		type MatchMinStoreElement,
 		type MatchStoreElement,
-		type MatchElementMin
+		type MatchElementMin,
+		type SuspiciousAction
 	} from '$lib/matchStore';
+	import { FileDropzone, tableMapperValues } from '@skeletonlabs/skeleton';
+	import { TabGroup, Tab } from '@skeletonlabs/skeleton';
+	import { Table } from '@skeletonlabs/skeleton';
+	import type { TableSource } from '@skeletonlabs/skeleton';
 
 	let matchesArr: MatchStoreElement;
 	let matchesMinArr: MatchMinStoreElement;
@@ -58,32 +63,56 @@
 			matches: value
 		} satisfies MatchMinStoreElement;
 	}
+
+	let tab = 0;
+	let suspiciousActions: SuspiciousAction[] | undefined;
+	$: suspiciousActions = matchesMinArr.matches[tab]?.suspiciousActions;
+	const tableSource: TableSource = {
+		head: ['frame', 'player', 'pattern', 'suspicion'],
+		body: tableMapperValues(suspiciousActions || [], ['frame', 'player', 'pattern', 'suspicion'])
+	};
 </script>
 
-<h1>Haxball Cheat Detector</h1>
-<input type="file" accept=".hbr2" on:change={handleFile} />
+<h1 class="text-center h1 p-8">Haxball Cheat Detector</h1>
+<div class="flex flex-row justify-center items-center gap-4 pb-8">
+	<FileDropzone name="file" accept=".hbr2" class="w-2/3" on:change={handleFile}>
+		<svelte:fragment slot="message">
+			<p class="font-bold">Upload the recording here !</p>
+			<p class="text-sm">Only .hbr2 files are accepted</p>
+		</svelte:fragment>
+	</FileDropzone>
+	<button
+		class="p-2 btn variant-ghost-tertiary"
+		on:click={getAnalysis}
+		disabled={matchesMinArr.matches.length == 0}>Get suspicious runs</button
+	>
+</div>
 
 {#if matchesMinArr.loading}
 	<p>Loading...</p>
 {:else if matchesMinArr.error}
 	<p>Bad file</p>
 {:else if matchesMinArr.matches.length > 0}
-	<button on:click={getAnalysis}>Get analysis</button>
-	{#each matchesMinArr.matches as match, index}
-		<h3>Match {index + 1}</h3>
-		<p>{match.scoreRed} - {match.scoreBlue}</p>
-		<p>Actions for {match.playerActions.length} frames</p>
-		{#if match.suspiciousActions}
-			<p>Suspicious actions: {match.suspiciousActions.length}</p>
-			<ul>
-				{#each match.suspiciousActions as action}
-					<li>
-						{action.player} at {getTime(action.frame)} with pattern: {action.pattern.change_frame} frame
-						actions for {action.pattern.consecutive_frames} frames (suspicion level: {action.pattern
-							.suspicion})
-					</li>
-				{/each}
-			</ul>
-		{/if}
-	{/each}
+	<TabGroup>
+		{#each matchesMinArr.matches as match, index}
+			<Tab bind:group={tab} value={index} name={`Match ${index}`}>
+				Match {index + 1} ({match.suspiciousActions?.length})
+			</Tab>
+		{/each}
+		<svelte:fragment slot="panel">
+			{#each matchesMinArr.matches as match, index}
+				{#if tab == index}
+					<div class="p-4">
+						<h3 class="h3">Match {index + 1}: {match.scoreRed} - {match.scoreBlue}</h3>
+						{#if match.suspiciousActions}
+							<p>Suspicious actions: {match.suspiciousActions.length}</p>
+							{#if match.suspiciousActions.length > 0}
+								<Table source={tableSource} />
+							{/if}
+						{/if}
+					</div>
+				{/if}
+			{/each}
+		</svelte:fragment>
+	</TabGroup>
 {/if}
