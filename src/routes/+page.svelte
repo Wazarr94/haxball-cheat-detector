@@ -12,6 +12,7 @@
 	import { TabGroup, Tab } from '@skeletonlabs/skeleton';
 	import { Table } from '@skeletonlabs/skeleton';
 	import type { TableSource } from '@skeletonlabs/skeleton';
+	import { ProgressBar } from '@skeletonlabs/skeleton';
 
 	let matchesArr: MatchStoreElement;
 	let matchesMinArr: MatchMinStoreElement;
@@ -36,20 +37,23 @@
 			})
 	};
 
+	let loading = false;
+
 	async function getAnalysis() {
+		loading = true;
 		let sendFile = JSON.stringify(matchesMinArr);
 		let sizeOctetSendFile = new TextEncoder().encode(sendFile).length;
 		let sizeMB = Math.round((sizeOctetSendFile / 1000000) * 100) / 100;
 		console.log(`Size of file: ${sizeMB} MB`);
-
 		const res = await fetch('api/recording', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(matchesMinArr)
+			body: sendFile
 		});
 		const data = await res.json();
+		loading = false;
 		console.log(data);
 		let value = matchesMinArr.matches.map((match, index) => {
 			return {
@@ -64,18 +68,47 @@
 		} satisfies MatchMinStoreElement;
 	}
 
+	function parseData(data: SuspiciousAction[] | undefined) {
+		return (data || []).map((action) => {
+			return {
+				time: getTime(action.frame),
+				player: action.player,
+				pattern: `${action.pattern.change_frame} frame actions for ${action.pattern.consecutive_frames} frames`,
+				suspicion: action.pattern.suspicion
+			};
+		});
+	}
+
 	let tab = 0;
-	let suspiciousActions: SuspiciousAction[] | undefined;
-	$: suspiciousActions = matchesMinArr.matches[tab]?.suspiciousActions;
-	const tableSource: TableSource = {
-		head: ['frame', 'player', 'pattern', 'suspicion'],
-		body: tableMapperValues(suspiciousActions || [], ['frame', 'player', 'pattern', 'suspicion'])
+	let tableSource: TableSource;
+	$: tableSource = {
+		head: ['time', 'player', 'pattern', 'suspicion'],
+		body: tableMapperValues(parseData(matchesMinArr.matches[tab]?.suspiciousActions), [
+			'time',
+			'player',
+			'pattern',
+			'suspicion'
+		])
+	};
+
+	let handleFileSvelte: (e: Event) => void = (e) => {
+		tab = 0;
+		handleFile(e);
 	};
 </script>
 
 <h1 class="text-center h1 p-8">Haxball Cheat Detector</h1>
+
+<div class="flex flex-row text-center justify-center text-l pb-8 gap-4">
+	<p class="w-1/3">
+		This website is a tool to detect cheaters in Haxball on any map. We catch macro abusers by
+		looking at streaks of very fast inputs.<br /> <br />We hope to adapt this tool for other
+		cheating patterns in the future.
+	</p>
+</div>
+
 <div class="flex flex-row justify-center items-center gap-4 pb-8">
-	<FileDropzone name="file" accept=".hbr2" class="w-2/3" on:change={handleFile}>
+	<FileDropzone name="file" accept=".hbr2" class="w-2/3" on:change={handleFileSvelte}>
 		<svelte:fragment slot="message">
 			<p class="font-bold">Upload the recording here !</p>
 			<p class="text-sm">Only .hbr2 files are accepted</p>
@@ -87,6 +120,10 @@
 		disabled={matchesMinArr.matches.length == 0}>Get suspicious runs</button
 	>
 </div>
+
+{#if loading}
+	<ProgressBar value={undefined} />
+{/if}
 
 {#if matchesMinArr.loading}
 	<p>Loading...</p>
@@ -103,12 +140,11 @@
 			{#each matchesMinArr.matches as match, index}
 				{#if tab == index}
 					<div class="p-4">
-						<h3 class="h3">Match {index + 1}: {match.scoreRed} - {match.scoreBlue}</h3>
-						{#if match.suspiciousActions}
-							<p>Suspicious actions: {match.suspiciousActions.length}</p>
-							{#if match.suspiciousActions.length > 0}
-								<Table source={tableSource} />
-							{/if}
+						<h3 class="h3">Score: {match.scoreRed} - {match.scoreBlue}</h3>
+						<h3 class="h3">Game time: {getTime(match.gameTicks)}</h3>
+						{#if match.suspiciousActions && match.suspiciousActions.length > 0}
+							<h2 class="h2 pt-2">Suspicious actions:</h2>
+							<Table class="p-4" source={tableSource} />
 						{/if}
 					</div>
 				{/if}
