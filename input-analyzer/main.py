@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from input_analyzer.processing import get_response
-from input_analyzer.utils import RecordingRequest, ResponseCheat
+from input_analyzer.utils import MatchRequest, ResponseCheat
 
 app = FastAPI()
 
@@ -17,8 +17,8 @@ app.add_middleware(
 
 
 @app.post("/recording")
-def detect_cheaters(recording: RecordingRequest) -> ResponseCheat:
-    resp = get_response(recording)
+def detect_cheaters(match: MatchRequest) -> ResponseCheat:
+    resp = get_response(match)
     return resp
 
 

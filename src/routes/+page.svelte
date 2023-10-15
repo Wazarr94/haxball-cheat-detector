@@ -32,11 +32,39 @@
 	};
 
 	async function getAnalysis() {
-		let sendFile = JSON.stringify(matchesMinArr);
+		matchesMinArr.matches.forEach(async (match) => {
+			const data = await sendMatch(match);
+			let value = matchesMinArr.matches.map((match, index) => {
+			return {
+				...match,
+				suspiciousActions: data[index]
+			} satisfies MatchElementMin;
+		});
+		matchesMinArr = {
+			loading: false,
+			error: false,
+			matches: value
+		} satisfies MatchMinStoreElement;
+		})
+	}
+
+	async function sendMatch(match: MatchElementMin) {
+		let sendFile = JSON.stringify(match);
 		let sizeOctetSendFile = new TextEncoder().encode(sendFile).length;
 		let sizeMB = Math.round((sizeOctetSendFile / 1000000) * 100) / 100;
 		console.log(`Size of file: ${sizeMB} MB`);
-
+		const stream = new Blob([sendFile], { type: 'application/json' }).stream();
+		const compressedFile = stream.pipeThrough(new CompressionStream('gzip'));
+		const reader = compressedFile.getReader();
+		let compressedFileRes = '';
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			compressedFileRes += new TextDecoder().decode(value);
+		}
+		let sizeCompressMB = Math.round((new TextEncoder().encode(compressedFileRes).length / 1000000) * 100) / 100;
+		console.log(`Size of compressed file: ${sizeCompressMB} MB`);
+		
 		const res = await fetch('api/recording', {
 			method: 'POST',
 			headers: {
@@ -46,17 +74,7 @@
 		});
 		const data = await res.json();
 		console.log(data);
-		let value = matchesMinArr.matches.map((match, index) => {
-			return {
-				...match,
-				suspiciousActions: data.matches[index]
-			} satisfies MatchElementMin;
-		});
-		matchesMinArr = {
-			loading: false,
-			error: false,
-			matches: value
-		} satisfies MatchMinStoreElement;
+		return data;
 	}
 </script>
 
