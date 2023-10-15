@@ -70,7 +70,7 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(matchesMinArr)
+			body: compressedFileRes
 		});
 		const data = await res.json();
 		console.log(data);
