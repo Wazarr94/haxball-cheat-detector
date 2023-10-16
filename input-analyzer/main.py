@@ -19,6 +19,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
 
 @app.post("/recording")
 async def detect_cheaters(match_request: Request) -> ResponseCheat:
