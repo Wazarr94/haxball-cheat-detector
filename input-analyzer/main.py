@@ -1,9 +1,13 @@
+import json
+
 import uvicorn
-from fastapi import FastAPI
+from brotli import decompress
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from input_analyzer.processing import get_response
-from input_analyzer.utils import RecordingRequest, ResponseCheat
+from input_analyzer.utils import MatchRequest, ResponseCheat
+
 
 app = FastAPI()
 
@@ -17,8 +21,12 @@ app.add_middleware(
 
 
 @app.post("/recording")
-def detect_cheaters(recording: RecordingRequest) -> ResponseCheat:
-    resp = get_response(recording)
+async def detect_cheaters(match_request: Request) -> ResponseCheat:
+    body = await match_request.body()
+    match_bytes = decompress(body)
+    match_json = json.loads(match_bytes.decode("utf-8"))
+    match_analysis = MatchRequest.model_validate(match_json)
+    resp = get_response(match_analysis)
     return resp
 
 

@@ -8,6 +8,7 @@
 		type MatchElementMin,
 		type SuspiciousAction
 	} from '$lib/matchStore';
+	import { compress } from 'brotli-compress';
 	import { FileDropzone, tableMapperValues } from '@skeletonlabs/skeleton';
 	import { TabGroup, Tab } from '@skeletonlabs/skeleton';
 	import { Table } from '@skeletonlabs/skeleton';
@@ -37,35 +38,56 @@
 			})
 	};
 
+	async function compressJSONStringify(jsonStr: string) {
+		const file = new TextEncoder().encode(jsonStr);
+		const quality = 3;
+		const compressed = await compress(file, {
+			quality: quality
+		});
+		return compressed;
+	}
+
 	let loading = false;
 
 	async function getAnalysis() {
+		let value = matchesMinArr.matches.map(async (match) => {
+			const data = await sendMatch(match);
+			return data;
+		});
+
 		loading = true;
-		let sendFile = JSON.stringify(matchesMinArr);
-		let sizeOctetSendFile = new TextEncoder().encode(sendFile).length;
-		let sizeMB = Math.round((sizeOctetSendFile / 1000000) * 100) / 100;
-		console.log(`Size of file: ${sizeMB} MB`);
-		const res = await fetch('api/recording', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: sendFile
-		});
-		const data = await res.json();
+
+		let suspicions = await Promise.all(value);
+
 		loading = false;
-		console.log(data);
-		let value = matchesMinArr.matches.map((match, index) => {
-			return {
-				...match,
-				suspiciousActions: data.matches[index]
-			} satisfies MatchElementMin;
-		});
+
 		matchesMinArr = {
 			loading: false,
 			error: false,
-			matches: value
+			matches: [
+				...matchesMinArr.matches.map((match, index) => {
+					return {
+						...match,
+						suspiciousActions: suspicions[index].suspicions
+					} satisfies MatchElementMin;
+				})
+			]
 		} satisfies MatchMinStoreElement;
+	}
+
+	async function sendMatch(match: MatchElementMin): Promise<{ suspicions: SuspiciousAction[] }> {
+		let sendFile = JSON.stringify(match);
+		const compressedFile = await compressJSONStringify(sendFile);
+
+		const res = await fetch('api/recording', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Content-Encoding': 'br'
+			},
+			body: compressedFile
+		});
+		return res.json();
 	}
 
 	function parseData(data: SuspiciousAction[] | undefined) {

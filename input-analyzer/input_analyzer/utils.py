@@ -37,4 +37,4 @@ class SuspiciousAction(BaseModel):
 
 
 class ResponseCheat(BaseModel):
-    matches: list[list[SuspiciousAction | None]]
+    suspicions: list[SuspiciousAction | None]
