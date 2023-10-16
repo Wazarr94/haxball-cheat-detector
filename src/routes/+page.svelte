@@ -9,10 +9,10 @@
 		type SuspiciousAction
 	} from '$lib/matchStore';
 	import { compress } from 'brotli-compress';
-	import { FileDropzone, tableMapperValues } from '@skeletonlabs/skeleton';
+	import { FileDropzone, getToastStore, tableMapperValues } from '@skeletonlabs/skeleton';
 	import { TabGroup, Tab } from '@skeletonlabs/skeleton';
 	import { Table } from '@skeletonlabs/skeleton';
-	import type { TableSource } from '@skeletonlabs/skeleton';
+	import type { TableSource, ToastSettings } from '@skeletonlabs/skeleton';
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 
 	let matchesArr: MatchStoreElement;
@@ -21,6 +21,8 @@
 	matchStore.subscribe((value) => {
 		matchesArr = value;
 	});
+
+	const toastStore = getToastStore();
 
 	$: matchesMinArr = {
 		loading: matchesArr.loading,
@@ -60,6 +62,14 @@
 		let suspicions = await Promise.all(value);
 
 		loading = false;
+
+		const suspicionsTotal = suspicions.reduce((acc, curr) => {
+			return acc + curr.suspicions.length;
+		}, 0);
+		const toast: ToastSettings = {
+			message: `Analysis done, ${suspicionsTotal} suspicious actions found`
+		};
+		toastStore.trigger(toast);
 
 		matchesMinArr = {
 			loading: false,
