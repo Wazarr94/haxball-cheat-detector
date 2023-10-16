@@ -46,7 +46,7 @@
 		});
 		return compressed;
 	}
-  
+
 	let loading = false;
 
 	async function getAnalysis() {
@@ -54,12 +54,12 @@
 			const data = await sendMatch(match);
 			return data;
 		});
-    
-    loading = true;
+
+		loading = true;
 
 		let suspicions = await Promise.all(value);
-    
-    loading = false;
+
+		loading = false;
 
 		matchesMinArr = {
 			loading: false,
@@ -78,7 +78,7 @@
 	async function sendMatch(match: MatchElementMin): Promise<{ suspicions: SuspiciousAction[] }> {
 		let sendFile = JSON.stringify(match);
 		const compressedFile = await compressJSONStringify(sendFile);
-  
+
 		const res = await fetch('api/recording', {
 			method: 'POST',
 			headers: {
