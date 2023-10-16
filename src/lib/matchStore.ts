@@ -42,14 +42,14 @@ type MatchElement = {
 	scoreBlue: number;
 	player: PlayerMatch[];
 	goals: { scorer: string; assist: string | false; currentScore: [number, number] }[];
-	playerActions: { frame: number; player: string; action: number }[][];
+	playerActions: { recMs: number; frame: number; player: string; action: number }[][];
 };
 
 export type MatchElementMin = {
 	scoreRed: number;
 	scoreBlue: number;
 	gameTicks: number;
-	playerActions: { frame: number; player: string; action: number }[][];
+	playerActions: { recMs: number; frame: number; player: string; action: number }[][];
 	suspiciousActions?: SuspiciousAction[];
 };
 
@@ -66,6 +66,7 @@ export type MatchMinStoreElement = {
 };
 
 export type SuspiciousAction = {
+	recMs: number;
 	frame: number;
 	player: string;
 	pattern: {

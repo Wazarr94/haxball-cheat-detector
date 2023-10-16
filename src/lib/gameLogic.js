@@ -11,7 +11,8 @@ function newReplay() {
 		progress: 0,
 		analyzed: 0,
 		changed: false,
-		done: false
+		done: false,
+		recMs: 0
 	};
 	matchStore.set({ matches: [], loading: false, error: false });
 }
@@ -4572,9 +4573,12 @@ Jb.prototype = C(V.prototype, {
 		if (loading.recLength == 1) {
 			loading.recLength = a.o.byteLength - a.a;
 		} else if (!loading.done) {
-			loading.analyzed = loading.recLength - a.o.byteLength + a.a + 8;
+			let analyzed = loading.recLength - a.o.byteLength + a.a + 8;
+			loading.recMs += 16.66666666666666666666;
+			loading.analyzed = analyzed;
 			const progress = Math.floor((loading.analyzed / loading.recLength) * 100);
-			if (progress == 100) {
+			const progressFloat = (loading.analyzed / loading.recLength) * 100;
+			if (progressFloat >= 99.9) {
 				loading.done = true;
 				keepUpdating = false;
 				matchStore.set({ matches: match, loading: false, error: false });
@@ -6953,6 +6957,7 @@ O.prototype = {
 						// actions
 						if (li[i].H != null) {
 							frameArr.push({
+								recMs: loading.recMs,
 								frame: match[match.length - 1].gameTicks,
 								player: li[i].w,
 								action: li[i].ob

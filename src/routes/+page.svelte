@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getTime } from '$lib';
+	import { getTime, getTimeMs } from '$lib';
 	import { handleFile } from '$lib/gameLogic';
 	import {
 		matchStore,
@@ -89,7 +89,12 @@
 		let sendFile = JSON.stringify(match);
 		const compressedFile = await compressJSONStringify(sendFile);
 
-		const res = await fetch('https://haxball-cheat-detector-production.up.railway.app/recording', {
+		const url =
+			process.env.NODE_ENV == 'development'
+				? 'http://localhost:8000/recording'
+				: 'https://haxball-cheat-detector-production.up.railway.app/recording';
+
+		const res = await fetch(url, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -103,6 +108,7 @@
 	function parseData(data: SuspiciousAction[] | undefined) {
 		return (data || []).map((action) => {
 			return {
+				recTime: getTimeMs(action.recMs),
 				time: getTime(action.frame),
 				player: action.player,
 				pattern: `${action.pattern.change_frame} frame actions for ${action.pattern.consecutive_frames} frames`,
@@ -114,8 +120,9 @@
 	let tab = 0;
 	let tableSource: TableSource;
 	$: tableSource = {
-		head: ['time', 'player', 'pattern', 'suspicion'],
+		head: ['time recording', 'time match', 'player', 'pattern', 'suspicion'],
 		body: tableMapperValues(parseData(matchesMinArr.matches[tab]?.suspiciousActions), [
+			'recTime',
 			'time',
 			'player',
 			'pattern',
