@@ -1,17 +1,18 @@
-# Use the official Python image as the base image
-FROM python:3.10
+FROM nikolaik/python-nodejs:python3.10-nodejs18-alpine
 
 # Install pnpm
-RUN apt-get update && apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
-    apt-get install -y nodejs && \
-    npm install -g pnpm
+RUN npm install -g pnpm
 
 # Set the working directory to /app
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
 COPY . /app
+
+# Install rustup and cargo
+RUN apk add rustup cargo && \
+    rustup-init -y --no-modify-path --default-toolchain stable && \
+    source $HOME/.cargo/env
 
 # Install the dependencies
 RUN pnpm install
