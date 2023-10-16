@@ -5,9 +5,10 @@
 		matchStore,
 		type MatchMinStoreElement,
 		type MatchStoreElement,
-		type MatchElementMin
+		type MatchElementMin,
+		type SuspiciousAction
 	} from '$lib/matchStore';
-	import { encode } from "@msgpack/msgpack"
+	import { compress } from 'brotli-compress';
 
 	let matchesArr: MatchStoreElement;
 	let matchesMinArr: MatchMinStoreElement;
@@ -32,44 +33,50 @@
 			})
 	};
 
-	async function getAnalysis() {
-		matchesMinArr.matches.forEach(async (match) => {
-			const data = await sendMatch(match);
-			let value = matchesMinArr.matches.map((match, index) => {
-			return {
-				...match,
-				suspiciousActions: data[index]
-			} satisfies MatchElementMin;
+	async function compressJSONStringify(jsonStr: string) {
+		const file = new TextEncoder().encode(jsonStr);
+		const quality = 3;
+		const compressed = await compress(file, {
+			quality: quality
 		});
+		return compressed;
+	}
+
+	async function getAnalysis() {
+		let value = matchesMinArr.matches.map(async (match) => {
+			const data = await sendMatch(match);
+			return data;
+		});
+
+		let suspicions = await Promise.all(value);
+
 		matchesMinArr = {
 			loading: false,
 			error: false,
-			matches: value
+			matches: [
+				...matchesMinArr.matches.map((match, index) => {
+					return {
+						...match,
+						suspiciousActions: suspicions[index].suspicions
+					} satisfies MatchElementMin;
+				})
+			]
 		} satisfies MatchMinStoreElement;
-		})
 	}
 
-	async function sendMatch(match: MatchElementMin) {
+	async function sendMatch(match: MatchElementMin): Promise<{ suspicions: SuspiciousAction[] }> {
 		let sendFile = JSON.stringify(match);
-		let sizeOctetSendFile = new TextEncoder().encode(sendFile).length;
-		let sizeMB = Math.round((sizeOctetSendFile / 1000000) * 100) / 100;
-		console.log(`Size of file: ${sizeMB} MB`);
-		const compressedFile = encode(match);
-		let sizeOctetCompressedFile = compressedFile.length;
-		let sizeCompressMB = Math.round((sizeOctetCompressedFile / 1000000) * 100) / 100;
-		console.log(`Size of compressed file: ${sizeCompressMB} MB`);
-		
+		const compressedFile = await compressJSONStringify(sendFile);
+
 		const res = await fetch('api/recording', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'Content-Encoding': 'msgpack'
+				'Content-Encoding': 'br'
 			},
 			body: compressedFile
 		});
-		const data = await res.json();
-		console.log(data);
-		return data;
+		return res.json();
 	}
 </script>
 
