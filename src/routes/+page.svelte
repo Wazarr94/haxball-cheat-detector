@@ -79,7 +79,7 @@
 		let sendFile = JSON.stringify(match);
 		const compressedFile = await compressJSONStringify(sendFile);
 
-		const res = await fetch('api/recording', {
+		const res = await fetch('https://haxball-cheat-detector-production.up.railway.app/recording', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
