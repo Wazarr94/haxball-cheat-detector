@@ -29,23 +29,6 @@ def create_dataframe(match: MatchRequest) -> list[pl.DataFrame]:
             right=(pl.col("action") & 8) != 0,
             kick=(pl.col("action") & 16) != 0,
         )
-        .with_columns(
-            game_time_m=(pl.col("frame") / 60 / 60)
-            .cast(int)
-            .cast(str)
-            .str.zfill(2),
-            game_time_s=(pl.col("frame") / 60 % 60)
-            .cast(int)
-            .cast(str)
-            .str.zfill(2),
-        )
-        .with_columns(
-            game_time=pl.format(
-                "{}:{}", pl.col("game_time_m"), pl.col("game_time_s")
-            )
-        )
-        .drop("game_time_m", "game_time_s")
-        .select("game_time", pl.exclude("game_time"))
     )
 
     return df_player_actions
@@ -105,6 +88,7 @@ def get_suspicious_actions_match(
     suspicious_list = [
         SuspiciousAction.model_validate(
             {
+                "recMs": row["recMs"],
                 "frame": row["frame"],
                 "player": row["player"],
                 "pattern": pattern,

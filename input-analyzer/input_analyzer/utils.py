@@ -14,6 +14,7 @@ class PatternCheat:
 
 
 class PlayerActionRequest(BaseModel):
+    recMs: float
     frame: int
     player: str
     action: int
@@ -31,6 +32,7 @@ class RecordingRequest(BaseModel):
 
 
 class SuspiciousAction(BaseModel):
+    recMs: float
     frame: int
     player: str
     pattern: PatternCheat
