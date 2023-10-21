@@ -47,6 +47,7 @@
 			on:change={handleFileSvelte}
 			on:dragenter={handleDragEnter}
 			on:dragleave={handleDragLeave}
+			on:drop={handleDragLeave}
 		>
 			<svelte:fragment slot="message">
 				{@html messageUpload.message}
