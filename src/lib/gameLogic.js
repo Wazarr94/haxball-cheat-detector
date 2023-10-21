@@ -4574,7 +4574,6 @@ Jb.prototype = C(V.prototype, {
 			loading.recLength = a.o.byteLength - a.a;
 		} else if (!loading.done) {
 			let analyzed = loading.recLength - a.o.byteLength + a.a + 8;
-			loading.recMs += 16.66666666666666666666;
 			loading.analyzed = analyzed;
 			const progress = Math.floor((loading.analyzed / loading.recLength) * 100);
 			const progressFloat = (loading.analyzed / loading.recLength) * 100;
@@ -4621,6 +4620,7 @@ Jb.prototype = C(V.prototype, {
 			for (; null != this.gg && this.hg == this.Y; )
 				(b = this.gg), b.apply(this.T), null != this.fc && this.fc(b), this.Dl();
 			this.Y++;
+			loading.recMs += 1000 / 60;
 			this.T.C(1);
 		}
 	},

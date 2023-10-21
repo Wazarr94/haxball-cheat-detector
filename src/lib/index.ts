@@ -14,6 +14,5 @@ export function getTimeMs(timeMs: number) {
 	const seconds = timeSeconds % 60;
 	const minutesStr = `${minutes < 10 ? '0' : ''}${minutes}`;
 	const secondsStr = `${seconds < 10 ? '0' : ''}${seconds}`;
-	return 'TODO';
-	// return `${minutesStr}:${secondsStr}`;
+	return `${minutesStr}:${secondsStr}`;
 }
