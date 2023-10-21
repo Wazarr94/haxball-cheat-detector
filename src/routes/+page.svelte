@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { displayToastResult, getTime, getTimeMs } from '$lib';
-	import { handleFile } from '$lib/gameLogic';
+	import { displayToastResult, getTime, parseDataTable } from '$lib';
 	import {
 		matchVal,
 		type MatchMinStoreElement,
@@ -8,14 +7,21 @@
 		type SuspiciousAction
 	} from '$lib/matchStore';
 	import { compress } from 'brotli-compress';
-	import { FileDropzone, getToastStore, tableMapperValues } from '@skeletonlabs/skeleton';
+	import { getToastStore, tableMapperValues } from '@skeletonlabs/skeleton';
 	import { TabGroup, Tab } from '@skeletonlabs/skeleton';
 	import { Table } from '@skeletonlabs/skeleton';
 	import type { TableSource } from '@skeletonlabs/skeleton';
 	import { ProgressBar } from '@skeletonlabs/skeleton';
+	import Dropzone from '../components/Dropzone.svelte';
+	import { handleFile } from '$lib/gameLogic';
 
 	let matchesMinArr: MatchMinStoreElement;
+	let tableSource: TableSource;
+
 	const toastStore = getToastStore();
+
+	let tab = 0;
+	let loading = false;
 
 	$: matchesMinArr = {
 		loading: $matchVal.loading,
@@ -33,6 +39,17 @@
 			})
 	};
 
+	$: tableSource = {
+		head: ['time recording', 'time match', 'player', 'pattern', 'suspicion'],
+		body: tableMapperValues(parseDataTable(matchesMinArr.matches[tab]?.suspiciousActions), [
+			'recTime',
+			'time',
+			'player',
+			'pattern',
+			'suspicion'
+		])
+	};
+
 	async function compressJSONStringify(jsonStr: string) {
 		const file = new TextEncoder().encode(jsonStr);
 		const quality = 3;
@@ -41,8 +58,6 @@
 		});
 		return compressed;
 	}
-
-	let loading = false;
 
 	async function getAnalysis() {
 		let suspicionsPromises = matchesMinArr.matches.map(async (match) => {
@@ -101,36 +116,6 @@
 		});
 		return res.json();
 	}
-
-	function parseData(data: SuspiciousAction[] | undefined) {
-		return (data || []).map((action) => {
-			return {
-				recTime: getTimeMs(action.recMs),
-				time: getTime(action.frame),
-				player: action.player,
-				pattern: `${action.pattern.change_frame} frame actions for ${action.pattern.consecutive_frames} frames`,
-				suspicion: action.pattern.suspicion
-			};
-		});
-	}
-
-	let tab = 0;
-	let tableSource: TableSource;
-	$: tableSource = {
-		head: ['time recording', 'time match', 'player', 'pattern', 'suspicion'],
-		body: tableMapperValues(parseData(matchesMinArr.matches[tab]?.suspiciousActions), [
-			'recTime',
-			'time',
-			'player',
-			'pattern',
-			'suspicion'
-		])
-	};
-
-	let handleFileSvelte: (e: Event) => void = (e) => {
-		tab = 0;
-		handleFile(e);
-	};
 </script>
 
 <h1 class="text-center h1 p-8">Haxball Cheat Detector</h1>
@@ -143,19 +128,12 @@
 	</p>
 </div>
 
-<div class="flex flex-row justify-center items-center gap-4 pb-8">
-	<FileDropzone name="file" accept=".hbr2" class="w-2/3" on:change={handleFileSvelte}>
-		<svelte:fragment slot="message">
-			<p class="font-bold">Upload the recording here !</p>
-			<p class="text-sm">Only .hbr2 files are accepted</p>
-		</svelte:fragment>
-	</FileDropzone>
-	<button
-		class="p-2 btn variant-ghost-tertiary"
-		on:click={getAnalysis}
-		disabled={matchesMinArr.matches.length == 0}>Get suspicious runs</button
-	>
-</div>
+<Dropzone
+	on:newFile={() => {
+		tab = 0;
+	}}
+	on:processFile={getAnalysis}
+/>
 
 {#if loading}
 	<ProgressBar value={undefined} />

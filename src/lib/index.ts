@@ -28,7 +28,7 @@ export function displayToastResult(
 	if (err) {
 		const toast: ToastSettings = {
 			message: 'API error, please try again',
-			background: 'variant-ghost-primary',
+			background: 'variant-filled-primary',
 			timeout: 3000,
 			hideDismiss: true
 		};
@@ -41,9 +41,21 @@ export function displayToastResult(
 	}, 0);
 	const toast: ToastSettings = {
 		message: `${suspicionsTotal} suspicious actions found`,
-		background: 'variant-ghost-secondary',
+		background: 'variant-filled-secondary',
 		hideDismiss: true,
 		timeout: 3000
 	};
 	toastStore.trigger(toast);
+}
+
+export function parseDataTable(data: SuspiciousAction[] | undefined) {
+	return (data || []).map((action) => {
+		return {
+			recTime: getTimeMs(action.recMs),
+			time: getTime(action.frame),
+			player: action.player,
+			pattern: `${action.pattern.change_frame} frame actions for ${action.pattern.consecutive_frames} frames`,
+			suspicion: action.pattern.suspicion
+		};
+	});
 }
