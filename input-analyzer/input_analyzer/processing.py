@@ -10,25 +10,23 @@ from input_analyzer.utils import (
 )
 
 CHEAT_PATTERNS = [
-    PatternCheat(consecutive_frames=15, change_frame=2, suspicion="medium"),
-    PatternCheat(consecutive_frames=20, change_frame=2, suspicion="high"),
-    PatternCheat(consecutive_frames=25, change_frame=3, suspicion="medium"),
-    PatternCheat(consecutive_frames=30, change_frame=3, suspicion="high"),
-    PatternCheat(consecutive_frames=60, change_frame=4, suspicion="medium"),
-    PatternCheat(consecutive_frames=80, change_frame=4, suspicion="high"),
+    PatternCheat(consecutive_frames=(1 * 4), change_frame=1, suspicion="medium"),
+    PatternCheat(consecutive_frames=(1 * 6), change_frame=1, suspicion="high"),
+    PatternCheat(consecutive_frames=(2 * 6), change_frame=2, suspicion="medium"),
+    PatternCheat(consecutive_frames=(2 * 8), change_frame=2, suspicion="high"),
+    PatternCheat(consecutive_frames=(3 * 8), change_frame=3, suspicion="medium"),
+    PatternCheat(consecutive_frames=(3 * 10), change_frame=3, suspicion="high"),
 ]
 
 
 def create_dataframe(match: MatchRequest) -> list[pl.DataFrame]:
     df = pl.DataFrame(itertools.chain(*match.playerActions))
-    df_player_actions = (
-        df.with_columns(
-            up=(pl.col("action") & 1) != 0,
-            down=(pl.col("action") & 2) != 0,
-            left=(pl.col("action") & 4) != 0,
-            right=(pl.col("action") & 8) != 0,
-            kick=(pl.col("action") & 16) != 0,
-        )
+    df_player_actions = df.with_columns(
+        up=(pl.col("action") & 1) != 0,
+        down=(pl.col("action") & 2) != 0,
+        left=(pl.col("action") & 4) != 0,
+        right=(pl.col("action") & 8) != 0,
+        kick=(pl.col("action") & 16) != 0,
     )
 
     return df_player_actions
