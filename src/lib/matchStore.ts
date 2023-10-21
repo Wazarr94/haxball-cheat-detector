@@ -76,7 +76,7 @@ export type SuspiciousAction = {
 	};
 };
 
-export const matchStore = writable<MatchStoreElement>({
+export const matchVal = writable<MatchStoreElement>({
 	matches: [],
 	loading: false,
 	error: false

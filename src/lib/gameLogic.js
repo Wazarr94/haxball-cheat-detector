@@ -1,5 +1,5 @@
 import pako from 'pako';
-import { matchStore } from './matchStore';
+import { matchVal } from './matchStore';
 import JSZip from 'jszip';
 
 var loading = {};
@@ -14,7 +14,7 @@ function newReplay() {
 		done: false,
 		recMs: 0
 	};
-	matchStore.set({ matches: [], loading: false, error: false });
+	matchVal.set({ matches: [], loading: false, error: false });
 }
 
 function leaveReplayer() {
@@ -4619,7 +4619,7 @@ Jb.prototype = C(V.prototype, {
 			if (progressFloat >= 99.9) {
 				loading.done = true;
 				keepUpdating = false;
-				matchStore.set({ matches: match, loading: false, error: false });
+				matchVal.set({ matches: match, loading: false, error: false });
 				leaveReplayer();
 			} else if (progress !== loading.progress) {
 				loading.progress = progress;
@@ -5887,7 +5887,7 @@ u.po = function (a) {
 				leaveReplayer();
 			};
 		}
-		matchStore.set({ matches: [], loading: false, error: true });
+		matchVal.set({ matches: [], loading: false, error: true });
 	}
 };
 u.Pf = function (a, b, c) {

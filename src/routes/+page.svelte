@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { getTime, getTimeMs } from '$lib';
+	import { displayToastResult, getTime, getTimeMs } from '$lib';
 	import { handleFile } from '$lib/gameLogic';
 	import {
-		matchStore,
+		matchVal,
 		type MatchMinStoreElement,
-		type MatchStoreElement,
 		type MatchElementMin,
 		type SuspiciousAction
 	} from '$lib/matchStore';
@@ -12,22 +11,16 @@
 	import { FileDropzone, getToastStore, tableMapperValues } from '@skeletonlabs/skeleton';
 	import { TabGroup, Tab } from '@skeletonlabs/skeleton';
 	import { Table } from '@skeletonlabs/skeleton';
-	import type { TableSource, ToastSettings } from '@skeletonlabs/skeleton';
+	import type { TableSource } from '@skeletonlabs/skeleton';
 	import { ProgressBar } from '@skeletonlabs/skeleton';
 
-	let matchesArr: MatchStoreElement;
 	let matchesMinArr: MatchMinStoreElement;
-
-	matchStore.subscribe((value) => {
-		matchesArr = value;
-	});
-
 	const toastStore = getToastStore();
 
 	$: matchesMinArr = {
-		loading: matchesArr.loading,
-		error: matchesArr.error,
-		matches: matchesArr.matches
+		loading: $matchVal.loading,
+		error: $matchVal.error,
+		matches: $matchVal.matches
 			.filter((match) => match.gameTicks > 1)
 			.map((match) => {
 				return {
@@ -52,24 +45,28 @@
 	let loading = false;
 
 	async function getAnalysis() {
-		let value = matchesMinArr.matches.map(async (match) => {
+		let suspicionsPromises = matchesMinArr.matches.map(async (match) => {
 			const data = await sendMatch(match);
 			return data;
 		});
 
 		loading = true;
+		let error = false;
 
-		let suspicions = await Promise.all(value);
+		const suspicionsRes = await Promise.allSettled(suspicionsPromises);
+		const suspicions = suspicionsRes
+			.map((res) => {
+				if (res.status == 'fulfilled') {
+					return res.value;
+				} else {
+					error = true;
+					return { suspicions: [] };
+				}
+			})
+			.map((res) => (error ? [] : res.suspicions));
 
 		loading = false;
-
-		const suspicionsTotal = suspicions.reduce((acc, curr) => {
-			return acc + curr.suspicions.length;
-		}, 0);
-		const toast: ToastSettings = {
-			message: `Analysis done, ${suspicionsTotal} suspicious actions found`
-		};
-		toastStore.trigger(toast);
+		displayToastResult(toastStore, suspicions, error);
 
 		matchesMinArr = {
 			loading: false,
@@ -78,7 +75,7 @@
 				...matchesMinArr.matches.map((match, index) => {
 					return {
 						...match,
-						suspiciousActions: suspicions[index].suspicions
+						suspiciousActions: suspicions[index]
 					} satisfies MatchElementMin;
 				})
 			]
