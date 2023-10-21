@@ -17,7 +17,47 @@ function newReplay() {
 	matchStore.set({ matches: [], loading: false, error: false });
 }
 
-function leaveReplayer() {}
+function leaveReplayer() {
+	(goals = []),
+		(match = [
+			{
+				stadium: false,
+				started: true,
+				stopped: false,
+				spaceMode: false,
+				realSoccerMode: false,
+				touches: [],
+				thirds: [0, 0, 0],
+				changes: [],
+				gameTicks: -1,
+				kicks: [],
+				shots: [],
+				redTeam: [],
+				blueTeam: [],
+				shotsRed: 0,
+				shotsBlue: 0,
+				passes: [],
+				passesRed: 0,
+				passesBlue: 0,
+				kicksRed: 0,
+				kicksBlue: 0,
+				possRed: 0,
+				possBlue: 0,
+				scoreRed: 0,
+				scoreBlue: 0,
+				player: [],
+				goals: [],
+				playerActions: []
+			}
+		]),
+		(player = []),
+		(players = []),
+		(playerList = []),
+		(updatePlayers = true);
+	(mtc = 0), (playSounds = false), (pileczka = []);
+	(redGoalCord = []), (blueGoalCord = []), (goalParsed = 0), (playerPos = []), (checkTeams = true);
+	playerList = [];
+}
 
 function loadModernizr() {
 	!(function (e, n, t) {
@@ -724,7 +764,6 @@ function $a(a) {
 	this.Il();
 }
 export function handleFile(e) {
-	matchStore.set({ matches: match, loading: true, error: false });
 	loadModernizr();
 	u.qp();
 	var c = this;
@@ -4581,6 +4620,7 @@ Jb.prototype = C(V.prototype, {
 				loading.done = true;
 				keepUpdating = false;
 				matchStore.set({ matches: match, loading: false, error: false });
+				leaveReplayer();
 			} else if (progress !== loading.progress) {
 				loading.progress = progress;
 				loading.changed = true;
